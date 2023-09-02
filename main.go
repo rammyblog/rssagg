@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
+	"github.com/rammyblog/rssagg/internal/database"
 	"github.com/joho/godotenv"
-	""
 )
 
 type apiConfig struct {
@@ -25,7 +25,7 @@ func main() {
 	router := chi.NewRouter()
 
 	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{"https://*", "http://*"},
+		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"*"},
 		ExposedHeaders:   []string{"Link"},
@@ -38,14 +38,10 @@ func main() {
 	}
 	v1Router := chi.NewRouter()
 
-
 	v1Router.Get("/health", handlerReadiness)
 	v1Router.Get("/err", handlerErr)
 
-
-
 	router.Mount("/v1", v1Router)
-
 
 	log.Printf("Server starting on port %v", port)
 	err := server.ListenAndServe()
