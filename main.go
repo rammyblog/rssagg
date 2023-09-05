@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
@@ -35,11 +36,14 @@ func main() {
 	if dbConnectionErr != nil {
 		log.Fatal("Cant connect to db", dbConnectionErr)
 	}
-
+	dbQueries := database.New(conn)
 	apiCfg := apiConfig{
-		DB: database.New(conn),
+		DB: dbQueries,
 	}
 
+	const collectionConcurrency = 10
+	const collectionInterval = time.Minute
+	go startScraping(dbQueries, collectionConcurrency, collectionInterval)
 	router := chi.NewRouter()
 
 	router.Use(cors.Handler(cors.Options{
@@ -65,7 +69,6 @@ func main() {
 	v1Router.Post("/feeds_follows", apiCfg.middlewareAuth(apiCfg.handlerCreateFeedFollow))
 	v1Router.Get("/feeds_follows", apiCfg.middlewareAuth(apiCfg.handlerGetFeedFollow))
 	v1Router.Delete("/feeds_follows/{feedFollowId}", apiCfg.middlewareAuth(apiCfg.handlerDeleteFeedFollow))
-
 
 	router.Mount("/v1", v1Router)
 
